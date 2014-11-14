@@ -24,6 +24,7 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 STOPWORDS = {'what', 'is', 'the', 'of'}
+#STOPWORDS = set()
 
 #@lru_cache(maxsize=32)
 def preprocess(sentence):
@@ -39,14 +40,20 @@ def get_example_features(example):
     target_only = target_tokens - source_tokens
 
     #features = {}
-    features = {'s:' + token: 1.0 for token in source_only}
-    features.update({'t:' + token: 1.0 for token in target_only})
-    features.update({'b:' + token: 1.0 for token in shared})
+    # features = {'s:' + token: 1.0 for token in source_only}
+    # features.update({'t:' + token: 1.0 for token in target_only})
+    # features.update({'b:' + token: 1.0 for token in shared})
+
+    features = []
+    for source in source_tokens:
+        for target in target_tokens:
+            features.append(source + ':' + target)
+    return {f: 1.0 for f in features}
 
     # features = {'s:' + token: 1.0 for token in source_tokens}
     # features.update({'t:' + token: 1.0 for token in target_tokens})
 
-    return features
+#    return features
 
 def get_features(examples):
     for example in examples:
@@ -72,7 +79,7 @@ class Experiment(object):
 
         logger.info("Converting features to list")
 
-        #features = islice(features, 50000)
+        features = islice(features, 50000)
         #features, values = zip(*list(features))
         features = (feature[0] for feature in features)
 
@@ -86,7 +93,8 @@ class Experiment(object):
         logger.info("Getting values")
         examples = self.get_examples('examples-train.json.gz')
         features = get_features(examples)
-        #features = islice(features, 50000)
+        
+        features = islice(features, 50000)
         values = [feature[1] for feature in features]
 
 
