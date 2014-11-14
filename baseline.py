@@ -70,8 +70,11 @@ class Experiment(object):
         examples = self.get_examples('examples-train.json.gz')
         features = get_features(examples)
 
-        features = islice(features, 50000)
-        features, values = zip(*list(features))
+        logger.info("Converting features to list")
+
+        #features = islice(features, 50000)
+        #features, values = zip(*list(features))
+        features = (feature[0] for feature in features)
 
         #print features
         #print values
@@ -79,6 +82,13 @@ class Experiment(object):
         logger.info("Training - building vectors")
         self.vectorizer = DictVectorizer()
         vectors = self.vectorizer.fit_transform(features)
+
+        logger.info("Getting values")
+        examples = self.get_examples('examples-train.json.gz')
+        features = get_features(examples)
+        #features = islice(features, 50000)
+        values = [feature[1] for feature in features]
+
 
         logger.info("Training classifier")
         svm = LinearSVC()
