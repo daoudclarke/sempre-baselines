@@ -10,6 +10,8 @@ import sys
 import os
 import numpy as np
 from random import Random
+from lru import lru_cache
+from analyse import analyse
 
 import logging
 logger = logging.getLogger(__name__)
@@ -23,12 +25,10 @@ logger.addHandler(ch)
 
 STOPWORDS = {'what', 'is', 'the', 'of'}
 
+#@lru_cache(maxsize=32)
 def preprocess(sentence):
     tokens = set(tokenize(sentence))
     return tokens - STOPWORDS
-
-# def get_tokens_length(tokens):
-#     return float(len(''.join(tokens)))
 
 def get_example_features(example):
     source_tokens = preprocess(example['source'])
@@ -38,9 +38,13 @@ def get_example_features(example):
     source_only = source_tokens - target_tokens
     target_only = target_tokens - source_tokens
 
-    features = {'s:' + token:1 for token in source_only}
-    features.update({'t:' + token:1 for token in target_only})
-    features.update({'b:' + token:1 for token in shared})
+    #features = {}
+    features = {'s:' + token: 1.0 for token in source_only}
+    features.update({'t:' + token: 1.0 for token in target_only})
+    features.update({'b:' + token: 1.0 for token in shared})
+
+    # features = {'s:' + token: 1.0 for token in source_tokens}
+    # features.update({'t:' + token: 1.0 for token in target_tokens})
 
     return features
 
@@ -51,8 +55,9 @@ def get_features(examples):
         yield features, example['score'] > 0.0
 
 class Experiment(object):
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path, results_path):
         self.dataset_path = dataset_path
+        self.results_path = results_path
         self.random = Random(1)
 
     def get_examples(self, filename):
@@ -78,11 +83,12 @@ class Experiment(object):
         logger.info("Training classifier")
         svm = LinearSVC()
 
-        # parameters = {'C': [0.1, 1.0, 10.0, 100.0]}
-        # self.classifier = GridSearchCV(svm, parameters, scoring='mean_absolute_error')
-        self.classifier = svm
+        parameters = {'C': [0.1, 1.0, 10.0, 100.0]}
+        self.classifier = GridSearchCV(svm, parameters, scoring='mean_absolute_error')
+        #self.classifier = svm
 
         self.classifier.fit(vectors, values)
+        self.classifier = self.classifier.best_estimator_
 
         logger.info("SVM classes: %r", self.classifier.classes_)
 
@@ -101,32 +107,36 @@ class Experiment(object):
         source_groups = groupby(examples, itemgetter('source'))
         logger.info("Evaluation on test set")
         count = 0
-        for source, group in source_groups:
-            group = list(group)
-            self.random.shuffle(group)
-            data = get_features(group)
-            features, values = zip(*list(data))
-        
-            vectors = self.vectorizer.transform(features)
-            predictions = self.classifier.decision_function(vectors)
-            #predictions = self.classifier.predict(vectors)
-            #print sorted(zip(predictions, group), reverse=True)
-            best_index = np.argmax(predictions)
-            print json.dumps(group[best_index])
-            count += 1
-            if count % 100 == 0:
-                logger.info("Processed %d items", count)
+        with open(self.results_path, 'w') as results_file:
+            for source, group in source_groups:
+                group = list(group)
+                self.random.shuffle(group)
+                data = get_features(group)
+                features, values = zip(*list(data))
+
+                vectors = self.vectorizer.transform(features)
+                predictions = self.classifier.decision_function(vectors)
+                #predictions = self.classifier.predict(vectors)
+                #print sorted(zip(predictions, group), reverse=True)
+                best_index = np.argmax(predictions)
+                results_file.write(json.dumps(group[best_index]) + '\n')
+                count += 1
+                if count % 100 == 0:
+                    logger.info("Processed %d items", count)
+                    #logger.debug("Cache info: %r", preprocess.cache_info())
 
     def run_experiment(self):
         self.train()
         self.test()
-
+        analyse(self.results_path)
 
 if __name__ == "__main__":
     import gzip
     from os.path import join
 
     dataset_path = '/home/dc/Experiments/sempre-paraphrase-dataset/'
-    experiment = Experiment(dataset_path)
+    results_path = 'results.json'
+
+    experiment = Experiment(dataset_path, results_path)
     experiment.run_experiment()
     
