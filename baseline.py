@@ -3,11 +3,13 @@ import json
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.cross_validation import KFold, cross_val_score
 from sklearn.svm import LinearSVC
+from sklearn.grid_search import GridSearchCV
 from itertools import islice, groupby
 from operator import itemgetter
 import sys
 import os
 import numpy as np
+from random import Random
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,11 +47,13 @@ def get_example_features(example):
 def get_features(examples):
     for example in examples:
         features = get_example_features(example)
-        yield features, example['score']
+        #yield features, int(example['score']*5)
+        yield features, example['score'] == 1.0
 
 class Experiment(object):
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
+        self.random = Random(1)
 
     def get_examples(self, filename):
         full_path = os.path.join(self.dataset_path, filename)
@@ -61,7 +65,7 @@ class Experiment(object):
         examples = self.get_examples('examples-train.json.gz')
         features = get_features(examples)
 
-        features = islice(features, 1000)
+        features = islice(features, 50000)
         features, values = zip(*list(features))
 
         #print features
@@ -72,8 +76,21 @@ class Experiment(object):
         vectors = self.vectorizer.fit_transform(features)
 
         logger.info("Training classifier")
-        self.classifier = LinearSVC()
+        svm = LinearSVC()
+
+        # parameters = {'C': [0.1, 1.0, 10.0, 100.0]}
+        # self.classifier = GridSearchCV(svm, parameters, scoring='mean_absolute_error')
+        self.classifier = svm
+
         self.classifier.fit(vectors, values)
+
+        logger.info("SVM classes: %r", self.classifier.classes_)
+
+        # feature_scores = self.vectorizer.inverse_transform(self.classifier.coef_)
+        # best_features = sorted(feature_scores[0].iteritems(), key=itemgetter(1), reverse=True)        
+        # logger.debug("Top SVM parameters: %r", best_features[:100])
+        # logger.debug("Top negative SVM parameters: %r", best_features[::-1][:100])
+
         logger.info("Finished training")
 
 
@@ -86,13 +103,16 @@ class Experiment(object):
         count = 0
         for source, group in source_groups:
             group = list(group)
+            self.random.shuffle(group)
             data = get_features(group)
             features, values = zip(*list(data))
         
             vectors = self.vectorizer.transform(features)
-            predictions = self.classifier.predict(vectors)
+            predictions = self.classifier.decision_function(vectors)
+            #predictions = self.classifier.predict(vectors)
+            #print sorted(zip(predictions, group), reverse=True)
             best_index = np.argmax(predictions)
-            print group[best_index]
+            print json.dumps(group[best_index])
             count += 1
             if count % 100 == 0:
                 logger.info("Processed %d items", count)
