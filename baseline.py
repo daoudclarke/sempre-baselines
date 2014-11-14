@@ -48,7 +48,7 @@ def get_features(examples):
     for example in examples:
         features = get_example_features(example)
         #yield features, int(example['score']*5)
-        yield features, example['score'] == 1.0
+        yield features, example['score'] > 0.0
 
 class Experiment(object):
     def __init__(self, dataset_path):
