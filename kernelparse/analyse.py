@@ -3,19 +3,8 @@ from numpy import mean
 from scipy.stats import tsem as stderr
 
 
-def analyse(filepath):
-    results_json = open(filepath)
+def analyse(results):
     scores = []
-    for result_json in results_json:
-        result = json.loads(result_json)
+    for result in results:
         scores.append(result['score'])
-    print "Mean score: %f +/ %f" % (
-        mean(scores),
-        stderr(scores),
-        )
-        
-
-
-
-if __name__ == "__main__":
-    analyse('results.json')
+    return  mean(scores), stderr(scores)

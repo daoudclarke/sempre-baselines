@@ -10,7 +10,6 @@ import sys
 import os
 import numpy as np
 from random import Random
-from lru import lru_cache
 from analyse import analyse
 
 import logging
@@ -26,23 +25,18 @@ logger.addHandler(ch)
 STOPWORDS = {'what', 'is', 'the', 'of'}
 #STOPWORDS = set()
 
-#@lru_cache(maxsize=32)
 def preprocess(sentence):
     tokens = set(tokenize(sentence))
     return tokens - STOPWORDS
 
 def get_example_features(example):
+    #print "Source", example['source']
     source_tokens = preprocess(example['source'])
     target_tokens = preprocess(example['target'])
-    #print source_tokens, target_tokens
+    #print "Tokens", source_tokens, target_tokens
     shared = source_tokens & target_tokens
     source_only = source_tokens - target_tokens
     target_only = target_tokens - source_tokens
-
-    #features = {}
-    # features = {'s:' + token: 1.0 for token in source_only}
-    # features.update({'t:' + token: 1.0 for token in target_only})
-    # features.update({'b:' + token: 1.0 for token in shared})
 
     features = []
     for source in source_tokens:
@@ -50,52 +44,57 @@ def get_example_features(example):
             features.append(source + ':' + target)
     return {f: 1.0 for f in features}
 
-    # features = {'s:' + token: 1.0 for token in source_tokens}
-    # features.update({'t:' + token: 1.0 for token in target_tokens})
-
-#    return features
 
 def get_features(examples):
     for example in examples:
         features = get_example_features(example)
-        #yield features, int(example['score']*5)
+        #print "Get features", example, features
         yield features, example['score'] > 0.0
 
-class Experiment(object):
-    def __init__(self, dataset_path, results_path):
-        self.dataset_path = dataset_path
-        self.results_path = results_path
-        self.random = Random(1)
+def get_examples(self, filename):
+    full_path = os.path.join(self.dataset_path, filename)
+    example_file = gzip.open(full_path)
+    for row in example_file:
+        yield json.loads(row)
 
-    def get_examples(self, filename):
-        full_path = os.path.join(self.dataset_path, filename)
-        example_file = gzip.open(full_path)
-        for row in example_file:
-            yield json.loads(row)
+
+class Experiment(object):
+    num_folds = 3
+
+    def __init__(self, dataset):
+        dataset = [(source, list(group)) for source, group in
+                    groupby(dataset, itemgetter('source'))]
+        if len(dataset) != len(set(map(itemgetter(0), dataset))):
+            raise ValueError("Dataset contains non-contiguous source examples")
+
+        length = len(dataset)
+        assert length > 1
+
+        train_length = int(0.8*length)
+        self.train_set = dataset[:train_length]
+        self.test_set = dataset[train_length:]
+
+        self.random = Random(1)        
+        
+        
 
     def train(self):
-        examples = self.get_examples('examples-train.json.gz')
-        features = get_features(examples)
-
         logger.info("Converting features to list")
+        features = []
+        values = []
+        for source, examples in self.train_set:
+            group_features = list(get_features(examples))
+            #print "Group features", group_features
+            values += [feature[1] for feature in group_features]
+            group_features = [feature[0] for feature in group_features]
+            features += group_features
+        logger.info("Total number of instances: %d", len(features))
+        assert len(features) == len(values)
 
-        features = islice(features, 50000)
-        #features, values = zip(*list(features))
-        features = (feature[0] for feature in features)
-
-        #print features
-        #print values
 
         logger.info("Training - building vectors")
         self.vectorizer = DictVectorizer()
         vectors = self.vectorizer.fit_transform(features)
-
-        logger.info("Getting values")
-        examples = self.get_examples('examples-train.json.gz')
-        features = get_features(examples)
-        
-        features = islice(features, 50000)
-        values = [feature[1] for feature in features]
 
 
         logger.info("Training classifier")
@@ -119,33 +118,31 @@ class Experiment(object):
 
 
     def test(self):
-        test_path = join(self.dataset_path, 'examples-test.json.gz')
-        examples = self.get_examples(test_path)
-
-        source_groups = groupby(examples, itemgetter('source'))
+        source_groups = self.test_set
         logger.info("Evaluation on test set")
         count = 0
-        with open(self.results_path, 'w') as results_file:
-            for source, group in source_groups:
-                group = list(group)
-                self.random.shuffle(group)
-                data = get_features(group)
-                features, values = zip(*list(data))
+        results = []
+        for source, group in source_groups:
+            print group
+            self.random.shuffle(group)
+            data = get_features(group)
+            features, values = zip(*list(data))
 
-                vectors = self.vectorizer.transform(features)
-                predictions = self.classifier.decision_function(vectors)
-                #predictions = self.classifier.predict(vectors)
-                #print sorted(zip(predictions, group), reverse=True)
-                best_index = np.argmax(predictions)
-                results_file.write(json.dumps(group[best_index]) + '\n')
-                count += 1
-                if count % 100 == 0:
-                    logger.info("Processed %d items", count)
-                    #logger.debug("Cache info: %r", preprocess.cache_info())
+            vectors = self.vectorizer.transform(features)
+            predictions = self.classifier.decision_function(vectors)
+            #predictions = self.classifier.predict(vectors)
+            #print sorted(zip(predictions, group), reverse=True)
+            best_index = np.argmax(predictions)
+            results.append(group[best_index])
+            count += 1
+            if count % 100 == 0:
+                logger.info("Processed %d items", count)
+                #logger.debug("Cache info: %r", preprocess.cache_info())
+        return results
 
     def run_experiment(self):
-        self.train()
-        self.test()
+        self.train(0)
+        results = self.test(0)
         analyse(self.results_path)
 
 if __name__ == "__main__":
