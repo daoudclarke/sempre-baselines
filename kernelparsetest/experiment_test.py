@@ -15,9 +15,10 @@ def test_ordered_data_run(data):
     parser = TensorParser()
     experiment = Experiment()
 
-    results = experiment.run(data, parser)
+    results = experiment.run(data, [parser])
 
-    mean, error = analyse(results)
+    analysis = analyse(results)
+    mean, error = analysis.values()[0]
     print "Mean: %f +/- %f" % (mean, error)
     assert abs(mean - 0.8) < 1e-5
 

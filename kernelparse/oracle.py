@@ -25,3 +25,6 @@ class OracleParser(object):
             results.append(group[best_index])
         return results
 
+    def __repr__(self):
+        return type(self).__name__
+
