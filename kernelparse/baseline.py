@@ -10,12 +10,6 @@ from analyse import analyse
 from kernelparse.experiment import Experiment
 from kernelparse.log import logger
 
-def get_examples(self, filename):
-    full_path = os.path.join(self.dataset_path, filename)
-    example_file = gzip.open(full_path)
-    for row in example_file:
-        yield json.loads(row)
-
 def output_results(results, results_path):
     with open(results_path, 'w') as results_file:
         json.dump(results, results_file, indent=4)
