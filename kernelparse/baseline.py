@@ -9,6 +9,7 @@ from analyse import analyse
 
 from kernelparse.experiment import Experiment
 from kernelparse.log import logger
+from kernelparse.tensor import TensorParser
 
 def output_results(results, results_path):
     with open(results_path, 'w') as results_file:
@@ -22,12 +23,12 @@ if __name__ == "__main__":
     results_path = 'results.json'
 
     with open(dataset_path) as dataset_file:
-        #dataset = islice(dataset_file, 100000)
-        dataset = [json.loads(row) for row in dataset_file if len(row.strip()) > 0]
+        dataset = islice(dataset_file, 10000)
+        dataset = [json.loads(row) for row in dataset if len(row.strip()) > 0]
 
-    experiment = Experiment(dataset)
-    experiment.train()
-    results = experiment.test()
+    parser = TensorParser()
+    experiment = Experiment()
+    results = experiment.run(dataset, parser)
     output_results(results, results_path)
     print analyse(results)
     
