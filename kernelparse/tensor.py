@@ -58,7 +58,7 @@ class TensorParser(object):
         svm = LinearSVC()
 
         parameters = {'C': [0.1, 1.0, 10.0, 100.0]}
-        self.classifier = GridSearchCV(svm, parameters, scoring='mean_absolute_error')
+        self.classifier = GridSearchCV(svm, parameters, scoring='f1')
 
         self.classifier.fit(vectors, values)
         self.classifier = self.classifier.best_estimator_
