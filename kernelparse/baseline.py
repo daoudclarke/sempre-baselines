@@ -65,13 +65,16 @@ class Experiment(object):
             raise ValueError("Dataset contains non-contiguous source examples")
 
         length = len(dataset)
+        logger.info("Total number of instances: %d", length)
         assert length > 1
+
+        self.random = Random(1)
+        self.random.shuffle(dataset)
 
         train_length = int(0.8*length)
         self.train_set = dataset[:train_length]
         self.test_set = dataset[train_length:]
 
-        self.random = Random(1)        
         
         
 
@@ -84,7 +87,6 @@ class Experiment(object):
             values += [feature[1] for feature in group_features]
             group_features = [feature[0] for feature in group_features]
             features += group_features
-        logger.info("Total number of instances: %d", len(features))
         assert len(features) == len(values)
 
 
@@ -145,8 +147,8 @@ if __name__ == "__main__":
     results_path = 'results.json'
 
     with open(dataset_path) as dataset_file:
-        dataset = islice(dataset_file, 1000)
-        dataset = [json.loads(row) for row in dataset if len(row) > 1]
+        #dataset = islice(dataset_file, 100000)
+        dataset = [json.loads(row) for row in dataset_file if len(row.strip()) > 0]
 
     experiment = Experiment(dataset)
     experiment.train()

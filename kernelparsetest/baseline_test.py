@@ -17,6 +17,7 @@ def test_ordered_data_run(data):
 
     experiment.train()
     results = experiment.test()
+    print results
 
     mean, error = analyse(results)
     print "Mean: %f +/- %f" % (mean, error)
