@@ -132,18 +132,25 @@ class Experiment(object):
                 logger.info("Processed %d items", count)
         return results
 
-    def run_experiment(self):
-        self.train(0)
-        results = self.test(0)
-        analyse(self.results_path)
+
+def output_results(results, results_path):
+    with open(results_path, 'w') as results_file:
+        json.dump(results, results_file, indent=4)
 
 if __name__ == "__main__":
     import gzip
     from os.path import join
 
-    dataset_path = '/home/dc/Experiments/sempre-paraphrase-dataset/'
+    dataset_path = '/home/dc/Experiments/sempre-paraphrase-dataset/examples.json'
     results_path = 'results.json'
 
-    experiment = Experiment(dataset_path, results_path)
-    experiment.run_experiment()
+    with open(dataset_path) as dataset_file:
+        dataset = islice(dataset_file, 1000)
+        dataset = [json.loads(row) for row in dataset if len(row) > 1]
+
+    experiment = Experiment(dataset)
+    experiment.train()
+    results = experiment.test()
+    output_results(results, results_path)
+    print analyse(results)
     
