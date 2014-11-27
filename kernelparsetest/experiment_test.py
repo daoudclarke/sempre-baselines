@@ -5,7 +5,8 @@ import os
 from tempfile import mkdtemp
 from kernelparsetest.randomdata import RandomData
 from kernelparse.analyse import analyse
-from kernelparse.baseline import Experiment
+from kernelparse.experiment import Experiment
+from kernelparse.tensor import TensorParser
 
 @pytest.fixture
 def data():
@@ -13,11 +14,10 @@ def data():
     return random.get_data()
 
 def test_ordered_data_run(data):
-    experiment = Experiment(data)
+    parser = TensorParser()
+    experiment = Experiment()
 
-    experiment.train()
-    results = experiment.test()
-    print results
+    results = experiment.run(data, parser)
 
     mean, error = analyse(results)
     print "Mean: %f +/- %f" % (mean, error)
@@ -26,4 +26,6 @@ def test_ordered_data_run(data):
 
 def test_that_test_data_in_training_set_errors(data):
     with pytest.raises(ValueError):
-        experiment = Experiment(list(data)*2)
+        experiment = Experiment()
+        parser = TensorParser()
+        results = experiment.run(list(data)*2, parser)
