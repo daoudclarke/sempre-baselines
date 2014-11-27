@@ -30,10 +30,8 @@ def preprocess(sentence):
     return tokens - STOPWORDS
 
 def get_example_features(example):
-    #print "Source", example['source']
     source_tokens = preprocess(example['source'])
     target_tokens = preprocess(example['target'])
-    #print "Tokens", source_tokens, target_tokens
     shared = source_tokens & target_tokens
     source_only = source_tokens - target_tokens
     target_only = target_tokens - source_tokens
@@ -48,7 +46,6 @@ def get_example_features(example):
 def get_features(examples):
     for example in examples:
         features = get_example_features(example)
-        #print "Get features", example, features
         yield features, example['score'] > 0.0
 
 def get_examples(self, filename):
@@ -84,7 +81,6 @@ class Experiment(object):
         values = []
         for source, examples in self.train_set:
             group_features = list(get_features(examples))
-            #print "Group features", group_features
             values += [feature[1] for feature in group_features]
             group_features = [feature[0] for feature in group_features]
             features += group_features
@@ -109,10 +105,10 @@ class Experiment(object):
 
         logger.info("SVM classes: %r", self.classifier.classes_)
 
-        # feature_scores = self.vectorizer.inverse_transform(self.classifier.coef_)
-        # best_features = sorted(feature_scores[0].iteritems(), key=itemgetter(1), reverse=True)        
-        # logger.debug("Top SVM parameters: %r", best_features[:100])
-        # logger.debug("Top negative SVM parameters: %r", best_features[::-1][:100])
+        feature_scores = self.vectorizer.inverse_transform(self.classifier.coef_)
+        best_features = sorted(feature_scores[0].iteritems(), key=itemgetter(1), reverse=True)        
+        logger.debug("Top SVM parameters: %r", best_features[:100])
+        logger.debug("Top negative SVM parameters: %r", best_features[::-1][:100])
 
         logger.info("Finished training")
 
@@ -123,21 +119,17 @@ class Experiment(object):
         count = 0
         results = []
         for source, group in source_groups:
-            print group
             self.random.shuffle(group)
             data = get_features(group)
             features, values = zip(*list(data))
 
             vectors = self.vectorizer.transform(features)
             predictions = self.classifier.decision_function(vectors)
-            #predictions = self.classifier.predict(vectors)
-            #print sorted(zip(predictions, group), reverse=True)
             best_index = np.argmax(predictions)
             results.append(group[best_index])
             count += 1
             if count % 100 == 0:
                 logger.info("Processed %d items", count)
-                #logger.debug("Cache info: %r", preprocess.cache_info())
         return results
 
     def run_experiment(self):

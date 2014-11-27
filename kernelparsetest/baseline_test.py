@@ -13,8 +13,6 @@ def data():
     return random.get_data()
 
 def test_ordered_data_run(data):
-    data = list(data)
-    print data
     experiment = Experiment(data)
 
     experiment.train()
