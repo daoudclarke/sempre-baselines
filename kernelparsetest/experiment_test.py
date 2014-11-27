@@ -1,8 +1,6 @@
 # Bismillahi-r-Rahmani-r-Rahim
 
 import pytest
-import os
-from tempfile import mkdtemp
 from kernelparsetest.randomdata import RandomData
 from kernelparse.analyse import analyse
 from kernelparse.experiment import Experiment
@@ -28,4 +26,4 @@ def test_that_test_data_in_training_set_errors(data):
     with pytest.raises(ValueError):
         experiment = Experiment()
         parser = TensorParser()
-        results = experiment.run(list(data)*2, parser)
+        experiment.run(list(data)*2, parser)

@@ -18,10 +18,6 @@ def preprocess(sentence):
 def get_example_features(example):
     source_tokens = preprocess(example['source'])
     target_tokens = preprocess(example['target'])
-    shared = source_tokens & target_tokens
-    source_only = source_tokens - target_tokens
-    target_only = target_tokens - source_tokens
-
     features = []
     for source in source_tokens:
         for target in target_tokens:
@@ -58,7 +54,7 @@ class TensorParser(object):
         svm = LinearSVC()
 
         parameters = {'C': [0.1, 1.0, 10.0, 100.0]}
-        self.classifier = GridSearchCV(svm, parameters, scoring='mean_absolute_error')
+        self.classifier = GridSearchCV(svm, parameters, scoring='f1')
 
         self.classifier.fit(vectors, values)
         self.classifier = self.classifier.best_estimator_

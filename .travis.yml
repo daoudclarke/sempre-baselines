@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.7"
+before_install:
+  - wget -O- http://neuro.debian.net/lists/precise.de-md.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
+  - sudo apt-key adv --recv-keys --keyserver hkp://pgp.mit.edu:80 2649A5A9
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq python-numpy python-scipy python-sklearn
+install:
+  - pip install -U pytest pyflakes
+  - pip install -r requirements.txt
+script:
+  - py.test kernelparsetest
+  - pyflakes .
+virtualenv:
+  system_site_packages: true
