@@ -11,33 +11,13 @@ from kernelparse.log import logger
 
 STOPWORDS = {'what', 'is', 'the', 'of'}
 
-def preprocess(sentence):
-    tokens = set(tokenize(sentence))
-    return tokens - STOPWORDS
-
-def get_example_features(example):
-    source_tokens = preprocess(example['source'])
-    target_tokens = preprocess(example['target'])
-    features = []
-    for source in source_tokens:
-        for target in target_tokens:
-            features.append(source + ':' + target)
-    return {f: 1.0 for f in features}
-
-
-def get_features(examples):
-    for example in examples:
-        features = get_example_features(example)
-        yield features, example['score'] > 0.0
-
-
 class TensorParser(object):
     def train(self, train_set):
         logger.info("Converting features to list")
         features = []
         values = []
         for source, examples in train_set:
-            group_features = list(get_features(examples))
+            group_features = list(self.get_features(examples))
             values += [feature[1] for feature in group_features]
             group_features = [feature[0] for feature in group_features]
             features += group_features
@@ -73,7 +53,7 @@ class TensorParser(object):
         count = 0
         results = []
         for source, group in test_set:
-            data = get_features(group)
+            data = self.get_features(group)
             features, values = zip(*list(data))
 
             vectors = self.vectorizer.transform(features)
@@ -84,6 +64,24 @@ class TensorParser(object):
             if count % 100 == 0:
                 logger.info("Processed %d items", count)
         return results
+
+    def get_features(self, examples):
+        for example in examples:
+            features = self.get_example_features(example)
+            yield features, example['score'] > 0.0
+
+    def get_example_features(self, example):
+        source_tokens = self.get_sentence_features(example['source'])
+        target_tokens = self.get_sentence_features(example['target'])
+        features = []
+        for source in source_tokens:
+            for target in target_tokens:
+                features.append(source + ':' + target)
+        return {f: 1.0 for f in features}
+
+    def get_sentence_features(self, sentence):
+        tokens = tokenize(sentence)
+        return [token for token in tokens if token not in STOPWORDS]
 
     def __repr__(self):
         return type(self).__name__
