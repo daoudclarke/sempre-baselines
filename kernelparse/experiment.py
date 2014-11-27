@@ -10,7 +10,7 @@ class Experiment(object):
     Class to run experiments on Sempre paraphrase datasets.
     """
 
-    def run(self, dataset, parser):
+    def run(self, dataset, parsers):
         logger.info("Loading dataset")
         random = Random(1)        
 
@@ -32,9 +32,12 @@ class Experiment(object):
         train_set = dataset[:train_length]
         test_set = dataset[train_length:]
 
-        parser.train(train_set)
-        return parser.test(test_set)
-        
+        results = {}
+        for parser in parsers:
+            parser.train(train_set)
+            parser_results = parser.test(test_set)
+            results[repr(parser)] = parser_results
+        return results
         
 
 

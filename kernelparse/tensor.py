@@ -84,3 +84,6 @@ class TensorParser(object):
             if count % 100 == 0:
                 logger.info("Processed %d items", count)
         return results
+
+    def __repr__(self):
+        return type(self).__name__
