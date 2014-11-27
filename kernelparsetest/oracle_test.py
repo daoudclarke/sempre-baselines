@@ -1,10 +1,9 @@
-import pytest
-from kernelparsetest.randomdata import RandomData
 from kernelparse.analyse import analyse
 from kernelparse.experiment import Experiment
 from kernelparse.oracle import OracleParser
 
 from kernelparsetest.experiment_test import data
+assert data   # To make pyflakes happy
 
 def test_oracle(data):
     parser = OracleParser()
