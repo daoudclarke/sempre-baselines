@@ -13,6 +13,8 @@ def data():
     return random.get_data()
 
 def test_ordered_data_run(data):
+    data = list(data)
+    print data
     experiment = Experiment(data)
 
     experiment.train()
@@ -20,7 +22,7 @@ def test_ordered_data_run(data):
 
     mean, error = analyse(results)
     print "Mean: %f +/- %f" % (mean, error)
-    assert mean == 0.8
+    assert abs(mean - 0.8) < 1e-5
 
 
 def test_that_test_data_in_training_set_errors(data):

@@ -31,8 +31,9 @@ class RandomData(object):
         # return ''.join(word)
 
     def get_data(self):
-        for i in range(100):
-            word1 = self.get_random_words()
+        random_words = [self.get_random_words() for i in range(100)]
+        random_words.sort()
+        for word1 in random_words:
             source = 'what is a %s like on tuesday?' % word1
             yield {
                 'source':  source,
