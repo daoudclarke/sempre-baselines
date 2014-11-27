@@ -3,9 +3,9 @@ python:
   - "2.7"
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq python-numpy python-scipy
+  - sudo apt-get install -qq python-numpy python-scipy python-sklearn
 install:
-  - pip install -U pytest scikit-learn
+  - pip install -U pytest
   - pip install -r requirements.txt
 script:
   - py.test test
