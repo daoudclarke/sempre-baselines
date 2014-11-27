@@ -1,16 +1,10 @@
-from gensim.utils import simple_preprocess as tokenize
 import json
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.cross_validation import KFold, cross_val_score
-from sklearn.svm import LinearSVC
-from sklearn.grid_search import GridSearchCV
-from itertools import islice, groupby
+from itertools import groupby
 from operator import itemgetter
 import sys
 import os
 import numpy as np
 from random import Random
-from lru import lru_cache
 from analyse import analyse
 
 import logging

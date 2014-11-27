@@ -1,4 +1,3 @@
-import json
 from numpy import mean
 from scipy.stats import tsem as stderr
 

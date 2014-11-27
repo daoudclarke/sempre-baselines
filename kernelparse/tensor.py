@@ -18,10 +18,6 @@ def preprocess(sentence):
 def get_example_features(example):
     source_tokens = preprocess(example['source'])
     target_tokens = preprocess(example['target'])
-    shared = source_tokens & target_tokens
-    source_only = source_tokens - target_tokens
-    target_only = target_tokens - source_tokens
-
     features = []
     for source in source_tokens:
         for target in target_tokens:
