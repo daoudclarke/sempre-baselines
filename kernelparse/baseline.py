@@ -11,7 +11,7 @@ def output_results(results, results_path):
 
 if __name__ == "__main__":
     dataset_path = '/home/dc/Experiments/sempre-paraphrase-dataset/examples.json'
-    results_path = 'results.json'
+    results_path = 'results/results.json'
 
     with open(dataset_path) as dataset_file:
         dataset = islice(dataset_file, 10000)
