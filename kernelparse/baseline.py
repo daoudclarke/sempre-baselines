@@ -3,7 +3,6 @@ Script to run experiments on semantic parsing paraphrase datasets.
 """
 
 import json
-from itertools import islice
 from analyse import analyse
 
 from kernelparse.experiment import Experiment
