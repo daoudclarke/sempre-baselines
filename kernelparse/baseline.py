@@ -10,10 +10,11 @@ from kernelparse.tensor import TensorParser
 from kernelparse.oracle import OracleParser
 from kernelparse.randomparser import RandomParser
 from kernelparse.bigramtensor import BigramTensorParser
+from kernelparse.errors import TensorErrorParser
 from kernelparse.log import logger
 
 PARSERS = {repr(parser): parser for parser in 
-           [TensorParser(), BigramTensorParser(), OracleParser(), RandomParser()] }
+           [TensorParser(), BigramTensorParser(), OracleParser(), RandomParser(), TensorErrorParser()] }
 
 def output_results(results, results_path):
     with open(results_path, 'w') as results_file:

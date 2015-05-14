@@ -41,8 +41,8 @@ class TensorParser(object):
 
         logger.info("SVM classes: %r", self.classifier.classes_)
 
-        feature_scores = self.vectorizer.inverse_transform(self.classifier.coef_)
-        best_features = sorted(feature_scores[0].iteritems(), key=itemgetter(1), reverse=True)        
+        self.feature_scores = self.vectorizer.inverse_transform(self.classifier.coef_)[0]
+        best_features = sorted(self.feature_scores.iteritems(), key=itemgetter(1), reverse=True)        
         logger.debug("Top SVM parameters: %r", best_features[:100])
         logger.debug("Top negative SVM parameters: %r", best_features[::-1][:100])
 
