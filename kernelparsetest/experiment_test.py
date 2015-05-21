@@ -5,6 +5,7 @@ from kernelparsetest.randomdata import RandomData
 from kernelparse.analyse import analyse
 from kernelparse.experiment import Experiment
 from kernelparse.tensor import TensorParser
+from kernelparse.entityparser import EntityParser
 
 @pytest.fixture
 def data():
@@ -12,10 +13,10 @@ def data():
     return random.get_data()
 
 def test_ordered_data_run(data):
-    parser = TensorParser()
+    parsers = [TensorParser(), EntityParser()]
     experiment = Experiment()
 
-    results = experiment.run(data, [parser])
+    results = experiment.run(data, parsers)
 
     analysis = analyse(results)
     mean, error = analysis.values()[0]

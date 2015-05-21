@@ -23,8 +23,9 @@ class TensorParser(object):
             features += group_features
         logger.info("Total number of instances: %d", len(features))
         assert len(features) == len(values)
+        self.build_model(features, values)
 
-
+    def build_model(self, features, values):
         logger.info("Training - building vectors")
         self.vectorizer = DictVectorizer()
         vectors = self.vectorizer.fit_transform(features)

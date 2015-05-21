@@ -18,10 +18,11 @@ class RandomData(object):
         'john',
         'example',
         'wichita',
-        'of'
-        'large'
+        'of',
+        'large',
         'really',
-        'very']
+        'very',
+        ]
 
     def get_random_words(self):
         words = [self.random.choice(self.choices)
@@ -29,6 +30,9 @@ class RandomData(object):
         return ' '.join(words)
         # self.random.shuffle(word)
         # return ''.join(word)
+
+    def get_random_entities(self):
+        return self.random.choice([['Potato', 'Orange'], ['Sausage'], ['English']])
 
     def get_data(self):
         random_words = [self.get_random_words() for i in range(100)]
@@ -39,21 +43,29 @@ class RandomData(object):
                 'source':  source,
                 'target': 'what on earth could a %s be?' % word1,
                 'score': 0.8,
+                'value': ['Potato'],
+                'gold': ['Potato'],
                 }
             yield {
                 'source': source,
                 'target': 'what do you think a %s is?' % word1,
                 'score': 0.8,
+                'value': ['Potato'],
+                'gold': ['Potato'],
                 }
             yield {
                 'source': source,
                 'target': 'Do you like %s?' % word1,
                 'score': 0.0,
+                'value': self.get_random_entities(),
+                'gold': ['Potato'],
                 }
             word2 = self.get_random_words()
             yield {
                 'source':  source,
                 'target': 'what on earth could a %s be?' % word2,
                 'score': 0.0,
+                'value': self.get_random_entities(),
+                'gold': ['Potato'],
                 }
 
